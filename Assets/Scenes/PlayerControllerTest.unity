@@ -121,8 +121,8 @@ GameObject:
   - component: {fileID: 798305947}
   - component: {fileID: 798305946}
   m_Layer: 0
-  m_Name: LightGrey_Rect32x128
-  m_TagString: Untagged
+  m_Name: floor
+  m_TagString: Floor
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -220,7 +220,7 @@ GameObject:
   - component: {fileID: 1882601834}
   - component: {fileID: 1882601835}
   m_Layer: 0
-  m_Name: New Sprite
+  m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -337,7 +337,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 656d20f4d41c9ab458c6a9856eb5ffa0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  jumpThrust: 500
+  jumpHeight: 5
   dashThrust: 0
 --- !u!1 &2089109274
 GameObject:

@@ -13,7 +13,13 @@ public class PlayerController : MonoBehaviour {
 	private bool jump;
 	public float jumpHeight;
 	public float dashThrust;
+	public float dashCooldown;
+	public float dashDelay;
 	public float moveSpeed;
+	public float maxVelocity;
+	private bool canDash;
+	private bool movingRight;
+
 
 	private float finalVel;
 	private float acceleration;
@@ -35,19 +41,27 @@ public class PlayerController : MonoBehaviour {
 		{
 			Debug.Log ("OnGround");
 			isOnGround = true;
+
 		}
 	}
 
 	// Update is called once per frame
 	void Update () {
+		player = ReInput.players.GetPlayer(playerId);
 		GetInput ();
 		CheckJump ();
-		CheckMovement ();
+	
+		//dash delay timer
+		dashDelay -= Time.deltaTime;
+		if (dashDelay <= 1)
+		{
+			rb.velocity = new Vector2 (0, rb.velocity.y);
+		}
 	}
 
 	void FixedUpdate()
 	{
-		
+		CheckMovement ();
 		CheckDash ();
 	}
 
@@ -65,7 +79,7 @@ public class PlayerController : MonoBehaviour {
 		{
 			if (isOnGround)
 			{
-				//rb.velocity = new Vector3 (rb.velocity.x, 0);
+				rb.velocity = new Vector3 (rb.velocity.x, 0);
 				ApplyJump ();
 				canDoubleJump = true;
 				isOnGround = false;
@@ -75,7 +89,7 @@ public class PlayerController : MonoBehaviour {
 				if (canDoubleJump) 
 				{
 					canDoubleJump = false;
-					//rb.velocity = new Vector2(rb.velocity.x	, 0);
+					rb.velocity = new Vector2(rb.velocity.x	, 0);
 					ApplyJump ();
 				}
 			}
@@ -86,19 +100,30 @@ public class PlayerController : MonoBehaviour {
 	//Check for Dash
 	void CheckDash()
 	{
-		
+
+		if (player.GetButtonDown ("Dash") && dashDelay <= 0) {
+			canDash = true;
+			dashDelay = dashCooldown;
+		} else {
+			canDash = false;
+
+		}
 	}
 
 	void CheckMovement()
 	{
-		if(moveVector.x != 0.0f || moveVector.y != 0.0f) {
-			//cc.Move(moveVector * moveSpeed * Time.deltaTime);
-			rb.MovePosition(this.transform.position + moveVector * moveSpeed * Time.deltaTime);
-		}     
-//		if (moveVector.x != 0.0f) {
-//			//cc.Move(moveVector * moveSpeed * Time.deltaTime);
-//			rb.AddForce (this.transform.forward + moveVector * moveSpeed * Time.deltaTime, ForceMode2D.Impulse);
-//		}
+
+		if (moveVector.x > 0.0f) {
+			Debug.Log (moveVector);
+			Debug.Log ("Movingright");
+			movingRight = true;
+
+			ApplyMovement ();
+		} else {
+			movingRight = false;
+
+			ApplyMovement ();
+		}
 	}
 
 	//Apply Velocity Calcluations 
@@ -110,6 +135,39 @@ public class PlayerController : MonoBehaviour {
 
 		rb.AddForce(transform.right * jumpThrust, ForceMode2D.Impulse);
 	}
+
+	void ApplyMovement()
+	{
+		
+		//rb.AddForce (this.transform.forward + moveVector * moveSpeed, ForceMode2D.Force);
+		if (canDash)
+		{
+			if (movingRight) {
+				rb.velocity = new Vector2 (0, rb.velocity.y);
+				rb.AddForce (this.transform.forward + new Vector3(1,0,0) * dashThrust, ForceMode2D.Impulse);
+				//this.transform.position += moveVector * (moveSpeed * dashThrust)* Time.fixedUnscaledDeltaTime;
+				Debug.Log ("Dash");
+			} else
+			{
+				rb.velocity = new Vector2 (0, rb.velocity.y);
+				rb.AddForce (this.transform.forward + new Vector3(-1,0,0) * dashThrust, ForceMode2D.Impulse);
+				//this.transform.position += moveVector * (moveSpeed * dashThrust)* Time.fixedUnscaledDeltaTime;
+				Debug.Log ("Dash");
+			}
+		}
+		else 
+		{
+			this.transform.localPosition += moveVector * moveSpeed * Time.deltaTime;
+			Debug.Log ("Moving");
+		}
+	}
+
+//	void ApplyDash()
+//	{
+//		//rb.AddForce (this.transform.forward + moveVector * dashThrust, ForceMode2D.Impulse);
+//		this.transform.localPosition += moveVector * dashThrust * Time.deltaTime; 
+//		
+//	}
 
 	// Calculate velocity
 	float CalclulateVel(float distance, float initialVel,float time)

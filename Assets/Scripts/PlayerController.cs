@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour {
 	public float jumpHeight;
 	public float dashThrust;
 	public float dashCooldown;
-	public float dashDelay;
+	private float dashDelay;
 	public float moveSpeed;
 	public float maxVelocity;
 	private bool canDash;
@@ -32,6 +32,8 @@ public class PlayerController : MonoBehaviour {
 	void Start () {
 		rb = this.GetComponent<Rigidbody2D> ();
 		player = ReInput.players.GetPlayer(playerId);
+		Debug.Log(Physics2D.gravity);
+
 	}
 
 	//Check if your on the ground
@@ -41,7 +43,7 @@ public class PlayerController : MonoBehaviour {
 		{
 			Debug.Log ("OnGround");
 			isOnGround = true;
-
+			Physics2D.gravity = new Vector2( 0.0f , -9.8f);
 		}
 	}
 
@@ -88,9 +90,11 @@ public class PlayerController : MonoBehaviour {
 			{
 				if (canDoubleJump) 
 				{
-					canDoubleJump = false;
+					
+					Physics2D.gravity = Physics2D.gravity*2;
 					rb.velocity = new Vector2(rb.velocity.x	, 0);
 					ApplyJump ();
+					canDoubleJump = false;
 				}
 			}
 		}

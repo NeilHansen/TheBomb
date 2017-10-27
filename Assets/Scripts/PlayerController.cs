@@ -25,6 +25,10 @@ public class PlayerController : MonoBehaviour {
 	private float acceleration;
 	private float jumpThrust; 
 
+	public float pushRadius;
+	public float pushForce;
+	private LayerMask enemy = 1 <<8;
+
 	private bool isOnGround = true;
 	private bool canDoubleJump = false;
 
@@ -32,7 +36,7 @@ public class PlayerController : MonoBehaviour {
 	void Start () {
 		rb = this.GetComponent<Rigidbody2D> ();
 		player = ReInput.players.GetPlayer(playerId);
-		Debug.Log(Physics2D.gravity);
+
 
 	}
 
@@ -58,6 +62,22 @@ public class PlayerController : MonoBehaviour {
 		if (dashDelay <= 1)
 		{
 			rb.velocity = new Vector2 (0, rb.velocity.y);
+		}
+
+		//playing with the push away feature 
+		if (Input.GetKeyDown ("space"))
+		{
+			Debug.Log ("Here1");
+			Collider2D[] colliders = Physics2D.OverlapCircleAll (this.transform.position, pushRadius, enemy);
+			foreach (Collider2D collider in colliders)
+			{
+				Debug.Log ("Here2");
+				Vector2 direction = collider.transform.position - transform.position;
+				direction = direction.normalized;
+				Rigidbody2D body = collider.gameObject.GetComponent<Rigidbody2D> ();
+				body.AddForce (direction * pushForce, ForceMode2D.Impulse);
+				Debug.Log (collider);
+			}
 		}
 	}
 
@@ -118,7 +138,6 @@ public class PlayerController : MonoBehaviour {
 	{
 
 		if (moveVector.x > 0.0f) {
-			Debug.Log (moveVector);
 			Debug.Log ("Movingright");
 			movingRight = true;
 
@@ -162,7 +181,7 @@ public class PlayerController : MonoBehaviour {
 		else 
 		{
 			this.transform.localPosition += moveVector * moveSpeed * Time.deltaTime;
-			Debug.Log ("Moving");
+//			Debug.Log ("Moving");
 		}
 	}
 

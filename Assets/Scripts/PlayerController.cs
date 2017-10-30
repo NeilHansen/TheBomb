@@ -12,18 +12,20 @@ public class PlayerController : MonoBehaviour {
 	private bool dash;
 	private bool jump;
 	public float jumpHeight;
-	public float dashThrust;
+	private float dashThrust;
 	public float dashCooldown;
 	private float dashDelay;
 	public float moveSpeed;
-	public float maxVelocity;
 	private bool canDash;
 	private bool movingRight;
+
+	public float dashLength;
+	public float dashSpeed;
 
 
 	private float finalVel;
 	private float acceleration;
-	private float jumpThrust; 
+	private float thrust; 
 
 	public float pushRadius;
 	public float pushForce;
@@ -56,7 +58,7 @@ public class PlayerController : MonoBehaviour {
 		player = ReInput.players.GetPlayer(playerId);
 		GetInput ();
 		CheckJump ();
-	
+		CheckBlast ();
 		//dash delay timer
 		dashDelay -= Time.deltaTime;
 		if (dashDelay <= 1)
@@ -65,20 +67,7 @@ public class PlayerController : MonoBehaviour {
 		}
 
 		//playing with the push away feature 
-		if (Input.GetKeyDown ("space"))
-		{
-			Debug.Log ("Here1");
-			Collider2D[] colliders = Physics2D.OverlapCircleAll (this.transform.position, pushRadius, enemy);
-			foreach (Collider2D collider in colliders)
-			{
-				Debug.Log ("Here2");
-				Vector2 direction = collider.transform.position - transform.position;
-				direction = direction.normalized;
-				Rigidbody2D body = collider.gameObject.GetComponent<Rigidbody2D> ();
-				body.AddForce (direction * pushForce, ForceMode2D.Impulse);
-				Debug.Log (collider);
-			}
-		}
+
 	}
 
 	void FixedUpdate()
@@ -111,7 +100,7 @@ public class PlayerController : MonoBehaviour {
 				if (canDoubleJump) 
 				{
 					
-					Physics2D.gravity = Physics2D.gravity*2;
+					Physics2D.gravity = Physics2D.gravity*1.5f;
 					rb.velocity = new Vector2(rb.velocity.x	, 0);
 					ApplyJump ();
 					canDoubleJump = false;
@@ -127,10 +116,11 @@ public class PlayerController : MonoBehaviour {
 
 		if (player.GetButtonDown ("Dash") && dashDelay <= 0) {
 			canDash = true;
+			Physics2D.gravity = new Vector2 (0.0f, 0.0f);
 			dashDelay = dashCooldown;
 		} else {
 			canDash = false;
-
+			Physics2D.gravity = new Vector2( 0.0f , -9.8f);
 		}
 	}
 
@@ -142,10 +132,29 @@ public class PlayerController : MonoBehaviour {
 			movingRight = true;
 
 			ApplyMovement ();
-		} else {
+		} else if(moveVector.x < 0.0f) {
+			Debug.Log ("MovingLeft");
 			movingRight = false;
 
 			ApplyMovement ();
+		}
+	}
+
+	void CheckBlast()
+	{
+		if (player.GetButtonDown ("Blast"))
+		{
+			Debug.Log ("Here1");
+			Collider2D[] colliders = Physics2D.OverlapCircleAll (this.transform.position, pushRadius, enemy);
+			foreach (Collider2D collider in colliders)
+			{
+				Debug.Log ("Here2");
+				Vector2 direction = collider.transform.position - transform.position;
+				direction = direction.normalized;
+				Rigidbody2D body = collider.gameObject.GetComponent<Rigidbody2D> ();
+				body.AddForce (direction * pushForce, ForceMode2D.Impulse);
+				Debug.Log (collider);
+			}
 		}
 	}
 
@@ -154,9 +163,9 @@ public class PlayerController : MonoBehaviour {
 	{
 		finalVel = CalclulateVel (jumpHeight, rb.velocity.y, 1.0f);
 		acceleration = CalclulateAccel (finalVel, rb.velocity.y, 1.0f);
-		jumpThrust = CalclulateJumpVel (rb.mass, acceleration);
+		thrust = CalclulateJumpVel (rb.mass, acceleration);
 
-		rb.AddForce(transform.right * jumpThrust, ForceMode2D.Impulse);
+		rb.AddForce(transform.right * thrust, ForceMode2D.Impulse);
 	}
 
 	void ApplyMovement()
@@ -166,13 +175,17 @@ public class PlayerController : MonoBehaviour {
 		if (canDash)
 		{
 			if (movingRight) {
-				rb.velocity = new Vector2 (0, rb.velocity.y);
+				float fVel = CalclulateVel (dashLength, rb.velocity.x, dashSpeed);
+				float accel = CalclulateAccel (finalVel, rb.velocity.x, dashSpeed);
+				dashThrust = CalclulateJumpVel (rb.mass, accel);
 				rb.AddForce (this.transform.forward + new Vector3(1,0,0) * dashThrust, ForceMode2D.Impulse);
 				//this.transform.position += moveVector * (moveSpeed * dashThrust)* Time.fixedUnscaledDeltaTime;
 				Debug.Log ("Dash");
 			} else
 			{
-				rb.velocity = new Vector2 (0, rb.velocity.y);
+				float fVel = CalclulateVel (dashLength, rb.velocity.x, dashSpeed);
+				float accel = CalclulateAccel (finalVel, rb.velocity.x, dashSpeed);
+				dashThrust = CalclulateJumpVel (rb.mass, accel);
 				rb.AddForce (this.transform.forward + new Vector3(-1,0,0) * dashThrust, ForceMode2D.Impulse);
 				//this.transform.position += moveVector * (moveSpeed * dashThrust)* Time.fixedUnscaledDeltaTime;
 				Debug.Log ("Dash");
